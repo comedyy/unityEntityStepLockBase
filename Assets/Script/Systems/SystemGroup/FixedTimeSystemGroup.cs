@@ -1,54 +1,42 @@
-// using Deterministics.Math;
-// using Game.Battle.Init;
-// using Game.BattleShare.Controller.BattleData;
 using Unity.Core;
+using Unity.Entities;
 
 public partial class FixedTimeSystemGroup : BaseUnsortSystemGroup
 {
-    public static FixedTimeSystemGroup Instance;
-    // LocalFrame _localFrame;
-
-    private bool _isLogicFrame = false;
-    public bool IsLogicFrame => _isLogicFrame;
-    
-    protected override void OnCreate()
+    LocalFrame _localFrame;
+    internal void InitLogicTime(LocalFrame localFrame)
     {
-        Instance = this;
-        base.OnCreate();
+        _localFrame = localFrame;
     }
-
-    // internal void InitLogicTime(LocalFrame localFrame)
-    // {
-    //     _localFrame = localFrame;
-    // }
 
     protected override void OnUpdate()
     {
         int needFrame = GetNeedCalFrame();
-        // int needFrame = 1;
+
         if (needFrame <= 0)
         {
-            _isLogicFrame = false;
-            World.SetTime(new TimeData(UnityEngine.Time.time, UnityEngine.Time.deltaTime));
+            return;
         }
-        
+
         for(int i = 0; i < needFrame; i++)
         {
-            // if(_localFrame.BattleEnd) return; // 游戏已经结束
-            
-            // BattleDataController.ElapsedTime += BattleDataController.DeltaTime;
-            // BattleDataController.FrameCount ++;
-            // BattleDataController.changeFramePresentaionTime = UnityEngine.Time.time;
-            // LocalFrame.Instance.GameFrame = BattleDataController.FrameCount;
 
-            World.SetTime(new TimeData(UnityEngine.Time.time, UnityEngine.Time.deltaTime));
+            ref var frameCount = ref SystemAPI.GetSingletonRW<ComFrameCount>().ValueRW;
+            frameCount.currentFrame++;
+            frameCount.escapedTime = frameCount.currentFrame * ComFrameCount.DELTA_TIME;
+            frameCount.changeFramePresentationTime = UnityEngine.Time.time;
+
+            LocalFrame.Instance.GameFrame = frameCount.currentFrame;
+
             base.OnUpdate();  // Update
-            _isLogicFrame = true;
         }
     }
 
     private int GetNeedCalFrame()
     {
-       return 1;
+        var gameStateCom = SystemAPI.GetSingleton<ComGameState>();
+        if(gameStateCom.IsEnd) return 0;
+
+        return 1;
     }
 }

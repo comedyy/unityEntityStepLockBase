@@ -12,12 +12,50 @@ public class Main : MonoBehaviour
         _world = new World("1");
         World.DefaultGameObjectInjectionWorld = _world;
 
-        _world.GetOrCreateSystemManaged<SimulationSystemGroup>().AddSystemToUpdateList(_world.GetOrCreateSystemManaged<FixedTimeSystemGroup>());
-        _world.GetOrCreateSystemManaged<PresentationSystemGroup>().AddSystemToUpdateList(_world.GetOrCreateSystemManaged<UnsortedPresentationSystemGroup>());
+        CreateSingletonEntity();
 
-        _world.GetOrCreateSystemManaged<FixedTimeSystemGroup>().AddSystemToUpdateList(_world.GetOrCreateSystemManaged<FirstSimulationSystem>());
-        _world.GetOrCreateSystemManaged<PresentationSystemGroup>().AddSystemToUpdateList(_world.GetOrCreateSystemManaged<FirstSimulationSystem>());
-        _world.EntityManager.CreateEntity(typeof(DemoComponent));
+        var localFrame = new LocalFrame(1, 0.05f, new BattleStartMessage(){ seed = 1});
+
+        // system group
+        var initGroup = _world.GetOrCreateSystemManaged<InitSystemGroup>();
+        _world.GetOrCreateSystemManaged<InitializationSystemGroup>().AddSystemToUpdateList(initGroup);
+
+        var fixedTimeGroup = _world.GetOrCreateSystemManaged<FixedTimeSystemGroup>();
+        _world.GetOrCreateSystemManaged<SimulationSystemGroup>().AddSystemToUpdateList(fixedTimeGroup);
+
+        var presentaionGroup = _world.GetOrCreateSystemManaged<UnsortedPresentationSystemGroup>();
+        _world.GetOrCreateSystemManaged<PresentationSystemGroup>().AddSystemToUpdateList(presentaionGroup);
+
+        // add systems
+        foreach(var x in EcsList.InitSystemList)
+        {
+            initGroup.AddSystemToUpdateList(_world.GetOrCreateSystemManaged(x));
+        }
+
+        foreach(var x in EcsList._simulationTypes)
+        {
+            fixedTimeGroup.AddSystemToUpdateList(_world.GetOrCreateSystemManaged(x));
+        }
+
+        // presentaion
+        foreach(var x in EcsList._presentationTypes)
+        {
+            presentaionGroup.AddSystemToUpdateList(_world.GetOrCreateSystemManaged(x));
+        }
+
+        // inject
+        fixedTimeGroup.InitLogicTime(localFrame);
+        World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<SyncUserInputSystem>().GetAllMessage = localFrame.GetFrameInput;
+
+        // create Logic
+        _world.EntityManager.CreateEntity(ArchetypeSnake.entityArchetype);
+    }
+
+    void CreateSingletonEntity()
+    {
+        World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntity(typeof(ComFrameCount));
+        World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntity(typeof(ComGameState));
+        World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntity(typeof(DemoComponent));
     }
 
     // Update is called once per frame
