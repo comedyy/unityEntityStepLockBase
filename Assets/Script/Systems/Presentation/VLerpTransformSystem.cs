@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 public partial class VLerpTransformSystem : SystemBase
@@ -8,22 +9,22 @@ public partial class VLerpTransformSystem : SystemBase
     protected override void OnUpdate()
     {
         var frameCount = SystemAPI.GetSingleton<ComFrameCount>();
+        var isLogicFrame = frameCount.frameUnity == UnityEngine.Time.frameCount;
+        var deltaTime = UnityEngine.Time.deltaTime;
+        var timeInterval = ComFrameCount.DELTA_TIME;
 
-        var isLogicFrame = frameCount.changeFramePresentationTime == UnityEngine.Time.time;
-        var logicTime = frameCount.escapedTime;
-        var escaped = UnityEngine.Time.time - logicTime;
-        var percent = Mathf.Clamp(escaped / ComFrameCount.DELTA_TIME, 0, 1);
-
-        Entities.ForEach((ref LComTransform lTransform, ref VComLerpTransform vLerp, ref VComTransform vTransform)=>{
+        Entities.ForEach((ref LComTransform lTransform, ref VComLerpTransform vLerp, ref VComTransform vTransform)=>
+        {
+            vLerp.lerpTime += deltaTime;
+            var percent = math.clamp(vLerp.lerpTime / timeInterval, 0, 1);
+            vTransform.pos = math.lerp(vLerp.pre.pos, vLerp.target.pos, percent);
 
             if(isLogicFrame)
             {
-                
+                vLerp.pre = vTransform;
+                vLerp.target = new VComTransform(){ pos = lTransform.pos};
+                vLerp.lerpTime = 0;
             }
-
-            var fromPos = vLerp.pre.pos;
-            var targetPos = translation.Value;
-            vTransform.pos = Mathf.lerp(fromPos, targetPos, percent);
         }).Run();
     }
 }

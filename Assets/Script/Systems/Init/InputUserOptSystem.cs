@@ -1,6 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
+using Deterministics.Math;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 public partial class InputUserOptSystem : SystemBase
@@ -10,6 +10,9 @@ public partial class InputUserOptSystem : SystemBase
         var x = Input.GetAxis("Horizontal");
         var y = Input.GetAxis("Vertical");
 
-        LocalFrame.Instance.SetRotation(x, y);
+        float2 fp = new float2(x, y);
+        fp = math.normalize(fp);
+
+        LocalFrameGenerator.inputCache.SetRotation((fp2)fp);
     }
 }

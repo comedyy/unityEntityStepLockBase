@@ -14,7 +14,7 @@ public class Main : MonoBehaviour
 
         CreateSingletonEntity();
 
-        var localFrame = new LocalFrame(1, 0.05f, new BattleStartMessage(){ seed = 1});
+        var localFrame = new LocalFrameGenerator(1, 0.05f, new BattleStartMessage(){ seed = 1});
 
         // system group
         var initGroup = _world.GetOrCreateSystemManaged<InitSystemGroup>();
@@ -45,7 +45,7 @@ public class Main : MonoBehaviour
 
         // inject
         fixedTimeGroup.InitLogicTime(localFrame);
-        World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<SyncUserInputSystem>().GetAllMessage = localFrame.GetFrameInput;
+        World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<SyncUserInputSystem>().fetchFrame = localFrame.syncFrameCache;
 
         // create Logic
         _world.EntityManager.CreateEntity(ArchetypeSnake.entityArchetype);
@@ -55,7 +55,6 @@ public class Main : MonoBehaviour
     {
         World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntity(typeof(ComFrameCount));
         World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntity(typeof(ComGameState));
-        World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntity(typeof(DemoComponent));
     }
 
     // Update is called once per frame

@@ -6,5 +6,6 @@ using UnityEngine;
 public struct VComLerpTransform : IComponentData
 {
     public VComTransform pre;
-    public float _totalTime;
+    public VComTransform target;
+    public float lerpTime;
 }

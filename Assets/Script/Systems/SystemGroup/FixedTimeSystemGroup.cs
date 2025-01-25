@@ -3,15 +3,16 @@ using Unity.Entities;
 
 public partial class FixedTimeSystemGroup : BaseUnsortSystemGroup
 {
-    LocalFrame _localFrame;
-    internal void InitLogicTime(LocalFrame localFrame)
+    LocalFrameGenerator _localFrame;
+    internal void InitLogicTime(LocalFrameGenerator localFrame)
     {
         _localFrame = localFrame;
     }
 
     protected override void OnUpdate()
     {
-        int needFrame = GetNeedCalFrame();
+        ref var frameCount = ref SystemAPI.GetSingletonRW<ComFrameCount>().ValueRW;
+        int needFrame = GetNeedCalFrame(frameCount.currentFrame);
 
         if (needFrame <= 0)
         {
@@ -21,22 +22,19 @@ public partial class FixedTimeSystemGroup : BaseUnsortSystemGroup
         for(int i = 0; i < needFrame; i++)
         {
 
-            ref var frameCount = ref SystemAPI.GetSingletonRW<ComFrameCount>().ValueRW;
             frameCount.currentFrame++;
             frameCount.escapedTime = frameCount.currentFrame * ComFrameCount.DELTA_TIME;
-            frameCount.changeFramePresentationTime = UnityEngine.Time.time;
-
-            LocalFrame.Instance.GameFrame = frameCount.currentFrame;
+            frameCount.frameUnity = UnityEngine.Time.frameCount;
 
             base.OnUpdate();  // Update
         }
     }
 
-    private int GetNeedCalFrame()
+    private int GetNeedCalFrame(int currentFrame)
     {
         var gameStateCom = SystemAPI.GetSingleton<ComGameState>();
         if(gameStateCom.IsEnd) return 0;
 
-        return 1;
+        return _localFrame.NeedExcuteFrame(currentFrame);
     }
 }

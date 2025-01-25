@@ -1,10 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
-using UnityEngine;
+using Unity.Mathematics;
 
 public struct VComTransform : IComponentData
 {
-    public Vector2 pos;
+    public float2 pos;
     public float angle;
 }

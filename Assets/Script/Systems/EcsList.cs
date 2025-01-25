@@ -13,12 +13,11 @@ public static class EcsList
 
     public static List<Type> _simulationTypes = new List<Type>{
         typeof(SyncUserInputSystem),
-        typeof(FirstSimulationSystem)
     };
 
     public static List<Type> _presentationTypes = new List<Type>()
     {
-        typeof(FirstPresentationSystem),
-        typeof(VLerpTransformSystem)
+        typeof(VLerpTransformSystem),
+        typeof(GameObjectUpdateSystem)
     };
 }

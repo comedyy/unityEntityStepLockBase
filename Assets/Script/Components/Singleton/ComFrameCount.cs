@@ -5,8 +5,8 @@ using Unity.Entities;
 public struct ComFrameCount : IComponentData
 {
     public int currentFrame;
-    public float escapedTime;
-    public float changeFramePresentationTime;
+    public fp escapedTime;
+    public int frameUnity;
 
-    public const float DELTA_TIME = 0.05f;
+    public static fp DELTA_TIME = fp._0_05;
 }

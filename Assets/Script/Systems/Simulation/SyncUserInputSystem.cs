@@ -1,14 +1,20 @@
 using System;
 using System.Collections.Generic;
+using Deterministics.Math;
 using Unity.Entities;
+
+public interface IFetchFrame
+{
+    void GetAllMessage(int frame, List<MessageItem> messageItems);
+}
 
 public partial class SyncUserInputSystem : SystemBase
 {
-    public Action<int, List<MessageItem>> GetAllMessage;
+    public IFetchFrame fetchFrame;
     List<MessageItem> _lstTemp = new List<MessageItem>();
     protected override void OnUpdate()
     {
-        if(GetAllMessage == null)
+        if(fetchFrame == null)
         {
             UnityEngine.Debug.LogError("GetAllMessage == null");
             return;
@@ -16,7 +22,8 @@ public partial class SyncUserInputSystem : SystemBase
 
         var frameComponent =  SystemAPI.GetSingleton<ComFrameCount>();
 
-        GetAllMessage(frameComponent.currentFrame, _lstTemp);
+        _lstTemp.Clear();
+        fetchFrame.GetAllMessage(frameComponent.currentFrame, _lstTemp);
 
         if (_lstTemp.Count == 0) return;
 
@@ -31,7 +38,9 @@ public partial class SyncUserInputSystem : SystemBase
         if(message.HasFlag(MessageBit.Dir))
         {
             ref var snake = ref SystemAPI.GetSingletonRW<LComTransform>().ValueRW;
-            snake.pos += new UnityEngine.Vector2(message.posItem.dirX / 1000f * 0.05f, message.posItem.dirY / 1000f * 0.05f) ;
+            var diff = new fp2(fp.FromRaw(message.posItem.dirX) * ComFrameCount.DELTA_TIME, fp.FromRaw(message.posItem.dirY) * ComFrameCount.DELTA_TIME) ;
+            diff *= 3;
+            snake.pos += diff;
         }
     }
 }
